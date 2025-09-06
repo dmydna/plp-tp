@@ -58,6 +58,27 @@ histograma n rango =  foldr(\x rec -> agregar x rec) (vacio n rango)
 
 
 
+minimos :: Int -> Float -> Float -> [Float]
+minimos n i t =  infinitoNegativo:[ i+x*t | x<- [0..(n-1)] ]
+
+maximos :: Int -> Float -> Float -> [Float]
+maximos n i t =  [ i+x*t | x<- [0..(n-1)] ]++[infinitoPositivo]
+
+porcentajes :: Int -> [Int] -> [Float]
+porcentajes total = foldr (\cant r -> ( (cant * 100)/total):rec) [] 
+                              
+casilleros :: Histograma -> [Casillero]
+casilleros (Histograma i t cs) = zipWith4 (
+                                          \min max cantidad porcentaje -> Casillero min max cantidad porcentaje
+                                        ) (minimos (length cs) i t )
+                                         (maximos (length cs) i t )
+                                          cs 
+                                          (porcentajes (sum cs) cs)
+                                        
+
+
+
+
 
 
 
