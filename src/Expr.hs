@@ -22,15 +22,45 @@ data Expr
   | Div Expr Expr
   deriving (Show, Eq)
 
--- recrExpr :: ... anotar el tipo ...
-recrExpr = error "COMPLETAR EJERCICIO 7"
 
--- foldExpr :: ... anotar el tipo ...
-foldExpr = error "COMPLETAR EJERCICIO 7"
+-- recrExpr :: ... anotar el tipo ...
+recExpr :: (Expr -> b -> b -> b ) -> (Expr -> b -> b -> b) -> (Expr -> b -> b -> b) -> (Expr -> b -> b -> b) -> (Expr -> Float -> Float -> b) -> (Expr -> Float -> b) -> Expr -> b
+recrExpr fdiv fmul fres fsum frng fcst expr =  case expr of  
+                                                   Const x -> fcst (Const x) x 
+                                                   Rango x y -> frng (Rango x y) x y
+                                                   Suma x y -> fsum (Suma x y) (rec x) (rec y)
+                                                   Resta x y -> fres (Resta x y) (rec x) (rec y)
+                                                   Mult x y -> fmul (Mult x y ) (rec x) (rec y)
+                                                   Div x y -> fdiv (Div x y) (rec x) (rec y)
+                                                  where rec = foldExpr fdiv fmul fres fsum frng fcst 
+
+
+foldExpr :: (b -> b -> b) -> ((b -> b -> b)) -> (b -> b -> b) -> (b -> b -> b) -> (Float -> Float -> b) -> (Float -> b) -> Expr -> b
+foldExpr fdiv fmul fres fsum frng fcst expr =  case expr of  
+                                                   Const x -> fcst x 
+                                                   Rango x y -> frng x y
+                                                   Suma x y -> fsum (rec x) (rec y)
+                                                   Resta x y -> fres (rec x) (rec y)
+                                                   Mult x y -> fmul (rec x) (rec y)
+                                                   Div x y -> fdiv (rec x) (rec y)
+                                                  where rec = foldExpr fdiv fmul fres fsum frng fcst
+
+-- List a = [] | a:(List a)
+
+-- x:x:x:x:[]
 
 -- | Evaluar expresiones dado un generador de números aleatorios
 eval :: Expr -> G Float
-eval = error "COMPLETAR EJERCICIO 8"
+eval expr gen =  (foldExpr 
+                  ( \x y -> x/y ) -- fdiv
+                  ( \x y -> x*y ) -- fmul
+                  ( \x y -> x-y ) -- fres
+                  ( \x y -> x+y ) -- fsum
+                  ( \x y -> dameUno (x , y) gen ) -- frng
+                  ( \x -> x ) -- fcst
+                  , gen) -- Retornamos una tupla con un resultado y un generador
+                
+
 
 -- | @armarHistograma m n f g@ arma un histograma con @m@ casilleros
 -- a partir del resultado de tomar @n@ muestras de @f@ usando el generador @g@.
