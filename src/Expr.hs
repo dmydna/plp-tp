@@ -64,6 +64,7 @@ eval expr gen =  (foldExpr
 
 -- | @armarHistograma m n f g@ arma un histograma con @m@ casilleros
 -- a partir del resultado de tomar @n@ muestras de @f@ usando el generador @g@.
+--armarHistograma :: Int -> Int -> ( Gen -> (Float, Gen) )-> Gen -> (Histograma, Gen)
 armarHistograma :: Int -> Int -> G Float -> G Histograma
 armarHistograma m n f g = error "COMPLETAR EJERCICIO 9"
 
