@@ -1,3 +1,5 @@
+
+
 module Histograma
   ( Histograma, -- No se exportan los constructores
     vacio,
@@ -13,6 +15,7 @@ module Histograma
 where
 
 import Util
+import Data.List (zipWith4)
 
 data Histograma = Histograma Float Float [Int]
   deriving (Show, Eq)
@@ -61,15 +64,15 @@ casPorcentaje :: Casillero -> Float
 casPorcentaje (Casillero _ _ _ p) = p
 
 -- | Dado un histograma, devuelve la lista de casilleros con sus límites, cantidad y porcentaje.
-casilleros :: Histograma -> [Casillero]
+
 minimos :: Int -> Float -> Float -> [Float]
-minimos n i t =  infinitoNegativo:[ i+x*t | x<- [0..(n-1)] ]
+minimos n i t =  infinitoNegativo:[ i+(fromIntegral x)*t | x<- [0..(n-1)] ]
 
 maximos :: Int -> Float -> Float -> [Float]
-maximos n i t =  [ i+x*t | x<- [0..(n-1)] ]++[infinitoPositivo]
+maximos n i t =  [ i+(fromIntegral x)*t | x<- [0..(n-1)] ]++[infinitoPositivo]
 
 porcentajes :: Int -> [Int] -> [Float]
-porcentajes total = foldr (\cant r -> ( (cant * 100)/total):rec) [] 
+porcentajes total = foldr (\cant rec -> ( ( (fromIntegral cant) * 100)/(fromIntegral total) ):rec) [] 
                               
 casilleros :: Histograma -> [Casillero]
 casilleros (Histograma i t cs) = zipWith4 (
