@@ -24,26 +24,35 @@ data Expr
 
 
 -- recrExpr :: ... anotar el tipo ...
-recExpr :: (Expr -> b -> b -> b ) -> (Expr -> b -> b -> b) -> (Expr -> b -> b -> b) -> (Expr -> b -> b -> b) -> (Expr -> Float -> Float -> b) -> (Expr -> Float -> b) -> Expr -> b
-recrExpr fdiv fmul fres fsum frng fcst expr =  case expr of  
-                                                   Const x -> fcst (Const x) x 
-                                                   Rango x y -> frng (Rango x y) x y
-                                                   Suma x y -> fsum (Suma x y) (rec x) (rec y)
-                                                   Resta x y -> fres (Resta x y) (rec x) (rec y)
-                                                   Mult x y -> fmul (Mult x y ) (rec x) (rec y)
-                                                   Div x y -> fdiv (Div x y) (rec x) (rec y)
-                                                  where rec = foldExpr fdiv fmul fres fsum frng fcst 
-
-
-foldExpr :: (b -> b -> b) -> ((b -> b -> b)) -> (b -> b -> b) -> (b -> b -> b) -> (Float -> Float -> b) -> (Float -> b) -> Expr -> b
-foldExpr fdiv fmul fres fsum frng fcst expr =  case expr of  
-                                                   Const x -> fcst x 
-                                                   Rango x y -> frng x y
-                                                   Suma x y -> fsum (rec x) (rec y)
-                                                   Resta x y -> fres (rec x) (rec y)
-                                                   Mult x y -> fmul (rec x) (rec y)
-                                                   Div x y -> fdiv (rec x) (rec y)
+recExpr ::  (Expr -> Expr -> G b -> G b ->  G b) ->  (Expr -> Expr -> G b -> G b ->  G b) ->  (Expr -> Expr -> G b -> G b ->  G b) -> (Expr -> Expr -> G b -> G b ->  G b)-> ( Float -> Float -> G b) -> (Float ->G b) -> Expr -> G b
+foldExpr fdiv fmul fres fsum frng fcst expr gen =  case expr of  
+                                                   Const x ->  fcst x -- tipo: Gen -> (b, Gen)
+                                                   Rango x y -> frng x y -- tipo : Gen -> (b, Gen)
+                                                   Suma s1 s2 -> fsum s1 s2 sres1 (rec s2 (snd sres1))  
+                                                   Resta r1 r2 -> fres r1 r2 rres1 (rec r2 (snd rres1))
+                                                   Mult m1 m2 -> fmul m1 m2 mres1 (rec m2 (snd mres1))
+                                                   Div d1 d2 -> fdiv d1 d2 dres1 (rec d2 (snd dres1))
                                                   where rec = foldExpr fdiv fmul fres fsum frng fcst
+                                                  sres1 = rec s1 gen
+                                                  rres1 = rec r1 gen
+                                                  mres1 = rec m1 gen
+                                                  dres1 = rec d1 gen
+
+foldExpr :: (G b -> G b ->  G b) ->  (G b -> G b ->  G b) ->  (G b -> G b ->  G b) -> (G b -> G b ->  G b) 
+          -> ( Float -> Float -> G b) -> (Float ->G b) -> Expr -> G b
+foldExpr fdiv fmul fres fsum frng fcst expr gen =  case expr of  
+                                                   Const x ->  fcst x -- tipo: Gen -> (b, Gen)
+                                                   Rango x y -> frng x y -- tipo : Gen -> (b, Gen)
+                                                   Suma s1 s2 -> fsum sres1 (rec s2 (snd sres1)) 
+                                                   Resta r1 r2 -> fres rres1 (rec r2 (snd rres1))
+                                                   Mult m1 m2 -> fmul mres1 (rec m2 (snd mres1))
+                                                   Div d1 d2 -> fdiv dres1 (rec d2 (snd dres1))
+                                                  where rec = foldExpr fdiv fmul fres fsum frng fcst
+                                                  sres1 = rec s1 gen
+                                                  rres1 = rec r1 gen
+                                                  mres1 = rec m1 gen
+                                                  dres1 = rec d1 gen
+
 
 -- List a = [] | a:(List a)
 
