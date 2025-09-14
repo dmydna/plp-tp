@@ -123,21 +123,23 @@ eval expr gen =  foldExpr
         (\f1 f2 -> evalExpr (f1 gen) (f2 (snd(f1 gen))) (+) )    -- fsum
         (\x  y  -> \gen -> dameUno (x , y) gen ) -- frng
         (\x     -> \gen -> (x, gen) )            -- fcst
+        expr
+        gen
 
 
 evalExpr :: (Float, Gen) -> (Float, Gen) -> (Float -> Float -> Float) -> G Float
-evalExpr    (v1, g1) (v2, g2) op gen = \gen -> (v1 `op` v2, g2)
+evalExpr    (v1, g1) (v2, g2) op  = \gen -> (v1 `op` v2, g2)
 
 
 -- | @armarHistograma m n f g@ arma un histograma con @m@ casilleros
 -- a partir del resultado de tomar @n@ muestras de @f@ usando el generador @g@.
 --armarHistograma :: Int -> Int -> ( Gen -> (Float, Gen) )-> Gen -> (Histograma, Gen)
 armarHistograma :: Int -> Int -> G Float -> G Histograma
-armarHistograma m n f  =  (\g  -> ( histograma m (inicio, tamaño) vs, g1 ))
-            where 
-               (vs, g1) = (muestra f n g) 
-               (inicio,fin) = rango95 vs    
-               tamaño  =  (fin - inicio) / m 
+armarHistograma m n f  = (\g  -> let 
+                  (vs, g1) = (muestra f n g) 
+                  (inicio,fin) = rango95 vs  
+                 in ( histograma m (inicio, tamaño) vs, g1 )
+             )
 
 -- | @evalHistograma m n e g@ evalúa la expresión @e@ usando el generador @g@ @n@ veces
 -- devuelve un histograma con @m@ casilleros y rango calculado con @rango95@ para abarcar el 95% de confianza de los valores.
