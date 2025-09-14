@@ -106,7 +106,7 @@ dameUno (l, u) g =
 muestra :: G a -> Int -> G [a]
 muestra _ 0 g = ([], g)
 muestra f n g = (x : xs, sf)
-  where
+  where 
     (x, s1) = f g
     (xs, sf) = muestra f (n - 1) s1
 
