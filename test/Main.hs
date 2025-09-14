@@ -41,7 +41,11 @@ testsAlinearDerecha =
   test
     [ alinearDerecha 6 "hola" ~?= "  hola",
       alinearDerecha 10 "incierticalc" ~?= "incierticalc",
-      completar
+      ---
+      alinearDerecha 6 "hola " ~?= " hola ",
+      alinearDerecha 6 "h o la" ~?= "h o la",
+      alinearDerecha 0 "hola" ~?= "hola",
+      alinearDerecha -1 "hola" ~?= "hola"
     ]
 
 testsActualizarElem :: Test
@@ -49,7 +53,11 @@ testsActualizarElem =
   test
     [ actualizarElem 0 (+ 10) [1, 2, 3] ~?= [11, 2, 3],
       actualizarElem 1 (+ 10) [1, 2, 3] ~?= [1, 12, 3],
-      completar
+      ---
+     actualizarElem (-1) (+ 10) [1, 2, 3] ~?= [1, 2, 3],
+     actualizarElem 999  (+ 10) [1, 2, 3] ~?= [1, 2, 3],
+     actualizarElem 2    (* 10) [1, 2, 3] ~?= [1, 2, 30],
+     actualizarElem 500  (+ 10) [] ~?= [],
     ]
 
 testsVacio :: Test
@@ -67,7 +75,13 @@ testsVacio =
               Casillero 4 6 0 0,
               Casillero 6 infinitoPositivo 0 0
             ],
-      completar
+       ---
+      casilleros (vacio 1 (-1, 1))
+        ~?= [ Casillero infinitoNegativo -1 0 0,
+              Casillero -1 0 0 0,
+              Casillero 0 infinitoPositivo 0 0
+            ],
+
     ]
 
 testsAgregar :: Test
@@ -95,14 +109,21 @@ testsAgregar =
                   Casillero 4 6 0 0,
                   Casillero 6 infinitoPositivo 0 0
                 ],
-          completar
+           ---
+          casilleros ( agregar (7) ( agregar (7) h0) ) 
+            ~?= [ Casillero infinitoNegativo 0 0 0,
+                  Casillero 0 2 0 0,
+                  Casillero 2 4 0 0,
+                  Casillero 4 6 0 0,
+                  Casillero 6 infinitoPositivo 2 100  -- El 100% de los valores están acá
+                ],
         ]
 
 testsHistograma :: Test
 testsHistograma =
   test
     [ histograma 4 (1, 5) [1, 2, 3] ~?= agregar 3 (agregar 2 (agregar 1 (vacio 4 (1, 5)))),
-      completar
+      histograma 4 (1, 5) [] ~?= (vacio 4 (1, 5)),
     ]
 
 testsCasilleros :: Test
@@ -122,7 +143,12 @@ testsCasilleros =
               Casillero 4.0 6.0 0 0.0,
               Casillero 6.0 infinitoPositivo 0 0.0
             ],
-      completar
+      --
+      casilleros  (histograma  1 (0, 3) [-1, 1, 5, 2])  )
+        ~?= [ Casillero infinitoNegativo 0 1 0.25,
+              Casillero 0 3 2 0.5,
+              Casillero 3 infinitoPositivo 1 0.25
+            ],
     ]
 
 testsRecr :: Test
@@ -144,13 +170,16 @@ testsEval =
       fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 0)) ~?= 3.7980492,
       -- el primer rango evalua a 2.7980492 y el segundo a 3.1250308
       fst (eval (Suma (Rango 1 5) (Rango 1 5)) (genNormalConSemilla 0)) ~?= 5.92308,
-      completar
+      ---
+      fst (eval (Resta (Rango 1 5) (Rango 1 5)) genFijo) ~?=  fst(dameUno (1, 5) genFijo),
     ]
 
 testsArmarHistograma :: Test
 testsArmarHistograma =
   test
-    [completar]
+    [ armarHistograma 1 3 (dameUno (1, 3)) genFijo  ~?=  agrega 3 (agrega(2 (agregar 1 (vacio 1 (1, 3))))),
+      
+    ]
 
 testsEvalHistograma :: Test
 testsEvalHistograma =

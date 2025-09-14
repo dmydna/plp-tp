@@ -25,7 +25,7 @@ data Histograma = Histograma Float Float [Int]
 -- Require que @l < u@ y @n >= 1@.
 
 vacio :: Int -> (Float, Float) -> Histograma
-vacio n (i, t) = Histograma i t (replicate n 0)
+vacio n (i, t) = Histograma i t (replicate (n+2) 0)
 
 posicion :: Float -> Float -> Float -> Int -> Int
 posicion n i t len | n < i = 0

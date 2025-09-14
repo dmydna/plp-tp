@@ -24,34 +24,70 @@ data Expr
 
 
 -- recrExpr :: ... anotar el tipo ...
-recExpr ::  (Expr -> Expr -> G b -> G b ->  G b) ->  (Expr -> Expr -> G b -> G b ->  G b) ->  (Expr -> Expr -> G b -> G b ->  G b) -> (Expr -> Expr -> G b -> G b ->  G b)-> ( Float -> Float -> G b) -> (Float ->G b) -> Expr -> G b
-foldExpr fdiv fmul fres fsum frng fcst expr gen =  case expr of  
-                                                   Const x ->  fcst x -- tipo: Gen -> (b, Gen)
-                                                   Rango x y -> frng x y -- tipo : Gen -> (b, Gen)
-                                                   Suma s1 s2 -> fsum s1 s2 sres1 (rec s2 (snd sres1))  
-                                                   Resta r1 r2 -> fres r1 r2 rres1 (rec r2 (snd rres1))
-                                                   Mult m1 m2 -> fmul m1 m2 mres1 (rec m2 (snd mres1))
-                                                   Div d1 d2 -> fdiv d1 d2 dres1 (rec d2 (snd dres1))
-                                                  where rec = foldExpr fdiv fmul fres fsum frng fcst
-                                                  sres1 = rec s1 gen
-                                                  rres1 = rec r1 gen
-                                                  mres1 = rec m1 gen
-                                                  dres1 = rec d1 gen
+recExpr ::  (Expr -> Expr -> G b -> G b ->  G b) ->  -- Div
+            (Expr -> Expr -> G b -> G b ->  G b) ->  -- Suma
+            (Expr -> Expr -> G b -> G b ->  G b) ->  -- Resta
+            (Expr -> Expr -> G b -> G b ->  G b) ->  -- Mult
+            (Float -> Float -> G b) ->               -- Rango
+            (Float ->G b) ->                         -- Const
+            Expr ->                                   
+            G b
+recExpr fdiv fmul fres fsum frng fcst e =  case e of  
+                                           Const x     -> fcst x gen   -- tipo: Gen -> (b, Gen)
+                                           Rango x y   -> frng x y gen -- tipo : Gen -> (b, Gen)
+                                           Suma  e1 e2 -> fsum x y (rec e1) (rec e1)  
+                                           Resta e1 e2 -> fres x y (rec e1) (rec e1)
+                                           Mult  e1 e2 -> fmul x y (rec e1) (rec e1)
+                                           Div   e1 e2 -> fdiv x y (rec e1) (rec e1)
+                                           where rec = recExpr fdiv fmul fres fsum frng fcst
 
-foldExpr :: (G b -> G b ->  G b) ->  (G b -> G b ->  G b) ->  (G b -> G b ->  G b) -> (G b -> G b ->  G b) 
-          -> ( Float -> Float -> G b) -> (Float ->G b) -> Expr -> G b
-foldExpr fdiv fmul fres fsum frng fcst expr gen =  case expr of  
-                                                   Const x ->  fcst x -- tipo: Gen -> (b, Gen)
-                                                   Rango x y -> frng x y -- tipo : Gen -> (b, Gen)
-                                                   Suma s1 s2 -> fsum sres1 (rec s2 (snd sres1)) 
-                                                   Resta r1 r2 -> fres rres1 (rec r2 (snd rres1))
-                                                   Mult m1 m2 -> fmul mres1 (rec m2 (snd mres1))
-                                                   Div d1 d2 -> fdiv dres1 (rec d2 (snd dres1))
-                                                  where rec = foldExpr fdiv fmul fres fsum frng fcst
-                                                  sres1 = rec s1 gen
-                                                  rres1 = rec r1 gen
-                                                  mres1 = rec m1 gen
-                                                  dres1 = rec d1 gen
+
+foldExpr :: (G b -> G b ->  G b) ->    -- Div
+            (G b -> G b ->  G b) ->    -- Mult
+            (G b -> G b ->  G b) ->    -- Rest
+            (G b -> G b ->  G b) ->    -- Fsum
+            (Float -> Float -> G b) -> -- Rango
+            (Float -> G b)  ->         -- Const
+            Expr -> 
+            G b
+foldExpr fdiv fmul fres fsum frng fcst e   =  case e of  
+                                             Const x   ->  fcst x gen    -- tipo: Gen -> (b, Gen)
+                                             Rango x y ->  frng x y gen  -- tipo : Gen -> (b, Gen)
+                                             Suma  e1 e2 -> fsum (rec e1) (rec e2) 
+                                             Resta e1 e2 -> fres (rec e1) (rec e2)
+                                             Mult  e1 e2 -> fmul (rec e1) (rec e2)
+                                             Div   e1 e2 -> fdiv (rec e1) (rec e2)
+                                             where rec = foldExpr fdiv fmul fres fsum frng fcst
+
+
+
+
+foldExpr1 :: (b-> b ->  G b) ->
+             ( b -> b ->  G b) -> 
+             ( b ->  b ->  G b) ->
+             ( b ->  b ->  G b) -> 
+             ( Float -> Float -> G b) -> 
+             (Float ->G b) -> 
+             Expr -> 
+             G b
+foldExpr1 fdiv fmul fres fsum frng fcst (Const x) = fcst x  -- tipo: Gen -> (b, Gen)
+foldExpr1 fdiv fmul fres fsum frng fcst (Rango x y) = frng x y -- tipo : Gen -> (b, Gen)
+foldExpr1 fdiv fmul fres fsum frng fcst (Suma s1 s2) gen = fsum res1 res2 g2
+                                                          where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+                                                               (res1, g1) = rcall s1 gen
+                                                               (res2, g2) = rcall s2 g1
+                    foldExpr1 fdiv fmul fres fsum frng fcst (Resta r1 r2) = fres res1 res2 g2
+                                                          where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+                                                               (res1, g1) = rcall s1 gen
+                                                               (res2, g2) = rcall s2 g1
+                     foldExpr1 fdiv fmul fres fsum frng fcst (Mult m1 m2) = fmul res1 res2 g2
+                                                          where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+                                                               (res1, g1) = rcall s1 gen
+                                                               (res2, g2) = rcall s2 g1
+                      foldExpr1 fdiv fmul fres fsum frng fcst (Div d1 d2) = fdiv res1 res2 g2
+                                                            where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+                                                                (res1, g1) = rcall s1 gen
+                                                                (res2, g2) = rcall s2 g1
 
 
 -- List a = [] | a:(List a)
@@ -59,29 +95,53 @@ foldExpr fdiv fmul fres fsum frng fcst expr gen =  case expr of
 -- x:x:x:x:[]
 
 -- | Evaluar expresiones dado un generador de números aleatorios
+--eval :: Expr -> G Float
+--eval expr gen =  foldExpr 
+--                  (\f1 f2 -> \gen -> (v1 + v2, g2) 
+--                  where (v1, g1) = f1 gen
+--                        (v2, g2) = f2 g1)       -- fdiv
+--                  (\f1 f2 -> \gen -> (v1 * v2, g2) 
+--                  where (v1, g1) = f1 gen
+--                        (v2, g2) = f2 g1)       -- fmul
+--                  (\f1 f2 -> \gen -> (v1 - v2, g2) 
+--                  where (v1, g1) = f1 gen
+--                        (v2, g2) = f2 g1)       -- fres
+--                  (\f1 f2 -> \gen -> (v1 + v2, g2)
+--                  where (v1, g1) = f1 gen
+--                        (v2, g2) = f2 g1 )       -- fsum
+--                  (\x  y  -> \gen -> dameUno (x , y) gen ) -- frng
+--                  (\x     -> \gen -> (x, gen) )            -- fcst
+
+
+
+-- | Evaluar expresiones dado un generador de números aleatorios
 eval :: Expr -> G Float
-eval expr gen =  (foldExpr 
-                  ( \x y -> x/y ) -- fdiv
-                  ( \x y -> x*y ) -- fmul
-                  ( \x y -> x-y ) -- fres
-                  ( \x y -> x+y ) -- fsum
-                  ( \x y -> dameUno (x , y) gen ) -- frng
-                  ( \x -> x ) -- fcst
-                  , gen) -- Retornamos una tupla con un resultado y un generador
-                
+eval expr gen =  foldExpr 
+                  (\f1 f2 -> evalExpr (f1 gen) (f2 snd(f1 gen)) (/) )    -- fdiv       
+                  (\f1 f2 -> evalExpr (f1 gen) (f2 snd(f1 gen)) (*) )    -- fmul
+                  (\f1 f2 -> evalExpr (f1 gen) (f2 snd(f1 gen)) (-) )    -- frest
+                  (\f1 f2 -> evalExpr (f1 gen) (f2 snd(f1 gen)) (+) )    -- fsum
+                  (\x  y  -> \gen -> dameUno (x , y) gen ) -- frng
+                  (\x     -> \gen -> (x, gen) )            -- fcst
+
+
+evalExpr :: (Float, Gen) -> (Float, Gen) -> (Float -> Float -> Float) -> G Float
+evalExpr  (v1, g1) (v2, g2) op = \gen -> (v1 `op` v2, g2)
 
 
 -- | @armarHistograma m n f g@ arma un histograma con @m@ casilleros
 -- a partir del resultado de tomar @n@ muestras de @f@ usando el generador @g@.
 --armarHistograma :: Int -> Int -> ( Gen -> (Float, Gen) )-> Gen -> (Histograma, Gen)
 armarHistograma :: Int -> Int -> G Float -> G Histograma
-armarHistograma m n f g = error "COMPLETAR EJERCICIO 9"
-
+armarHistograma m n f  =  \g  -> ( histograma m (inicio, tamaño) vs, g1)
+                      where (vs, g1) = muestra f n g 
+                             (inicio, fin) =  rango95 vs 
+                               tamaño  =  (fin - inicio) / m
 -- | @evalHistograma m n e g@ evalúa la expresión @e@ usando el generador @g@ @n@ veces
 -- devuelve un histograma con @m@ casilleros y rango calculado con @rango95@ para abarcar el 95% de confianza de los valores.
 -- @n@ debe ser mayor que 0.
 evalHistograma :: Int -> Int -> Expr -> G Histograma
-evalHistograma m n expr = error "COMPLETAR EJERCICIO 10"
+evalHistograma m n expr = armarHistograma m n (eval expr)
 
 -- Podemos armar histogramas que muestren las n evaluaciones en m casilleros.
 -- >>> evalHistograma 11 10 (Suma (Rango 1 5) (Rango 100 105)) (genNormalConSemilla 0)
@@ -93,7 +153,25 @@ evalHistograma m n expr = error "COMPLETAR EJERCICIO 10"
 -- | Mostrar las expresiones, pero evitando algunos paréntesis innecesarios.
 -- En particular queremos evitar paréntesis en sumas y productos anidados.
 mostrar :: Expr -> String
-mostrar = error "COMPLETAR EJERCICIO 11"
+mostrar e =  fst (foldExpr 
+                  (\f1 f2 -> \gen -> ( v1  ++ ["/"] ++ v2, g2) 
+                  where (v1, g1) = f1 gen
+                        (v2, g2) = f2 g1)       -- fdiv
+                  (\f1 f2 -> \gen -> ( show v1  ++ ["*"] ++ show v2, g2) 
+                  where (v1, g1) = f1 gen
+                        (v2, g2) = f2 g1)       -- fmul
+                  (\f1 f2 -> \gen -> ( show v1  ++ ["+"] ++ show v2, g2) 
+                  where (v1, g1) = f1 gen
+                        (v2, g2) = f2 g1)       -- fres
+                  (\f1 f2 -> \gen ->  ( show v1  ++ ["+"] ++ show v2, g2) 
+                  where (v1, g1) = f1 gen
+                        (v2, g2) = f2 g1 )       -- fsum
+                  (\x  y  -> \gen ->  (show x ++ "∼" ++ show y, gen)  ) -- frng
+                  (\x     -> \gen ->  (show x, gen) )  
+                  e  
+                 genFijo )       -- fcst
+
+
 
 data ConstructorExpr = CEConst | CERango | CESuma | CEResta | CEMult | CEDiv
   deriving (Show, Eq)
