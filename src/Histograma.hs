@@ -25,11 +25,14 @@ data Histograma = Histograma Float Float [Int]
 -- Require que @l < u@ y @n >= 1@.
 
 vacio :: Int -> (Float, Float) -> Histograma
-vacio n (i, t) = Histograma i t (replicate (n+2) 0)
+vacio n (i, fin) = Histograma i t (replicate (n+2) 0)
+                    where 
+                          t = (fin - i)/(fromIntegral n)
+
 
 posicion :: Float -> Float -> Float -> Int -> Int
 posicion n i t len | n < i = 0
-                   | otherwise = min (floor ((n-i)/t)) len
+                   | otherwise = min (floor ( (n-i)/t ) +1 ) len
 
 
 agregar :: Float -> Histograma -> Histograma
@@ -39,7 +42,7 @@ agregar n (Histograma i t cs) =
         
 
 histograma :: Int -> (Float, Float) -> [Float] -> Histograma
-histograma n rango =  foldr(\x rec -> agregar x rec) (vacio n rango) 
+histograma n rango =  foldr (\x rec -> agregar x rec) (vacio n rango) 
 
 
 -- | Un `Casillero` representa un casillero del histograma con sus límites, cantidad y porcentaje.
@@ -69,10 +72,11 @@ minimos :: Int -> Float -> Float -> [Float]
 minimos n i t =  infinitoNegativo:[ i+(fromIntegral x)*t | x<- [0..(n-1)] ]
 
 maximos :: Int -> Float -> Float -> [Float]
-maximos n i t =  [ i+(fromIntegral x)*t | x<- [0..(n-1)] ]++[infinitoPositivo]
+maximos n i t =  [ i+(fromIntegral x)*t | x<- [0..(n-2)] ]++[infinitoPositivo]
 
 porcentajes :: Int -> [Int] -> [Float]
-porcentajes total = foldr (\cant rec -> ( ( (fromIntegral cant) * 100)/(fromIntegral total) ):rec) [] 
+porcentajes 0 xs = replicate (length xs) 0
+porcentajes total xs = foldr (\cant rec -> (( (fromIntegral cant) * 100) / (fromIntegral total)) :rec) [] xs
                               
 casilleros :: Histograma -> [Casillero]
 casilleros (Histograma i t cs) = zipWith4 (
