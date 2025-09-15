@@ -154,13 +154,34 @@ testsCasilleros =
 testsRecr :: Test
 testsRecr =
   test
-    [ completar
+    [ 
+     fst ( recrExpr (\e1 e2 x y gen -> ( x++y ,gen)) -- Prueba de valores de la recursion
+                    (\e1 e2 x y gen -> ( x++y ,gen))
+                    (\e1 e2 x y gen -> ( x++y ,gen)) 
+                    (\e1 e2 x y gen -> ( x++y ,gen)) 
+                    (\x y gen -> ( x:y:[] ,gen))
+                    (\x gen -> ( x:[] ,gen))  
+                    (Div (Mult (Const 3) ( Rango 0 4 )) (Resta (Const 5) (Rango 0 4))) genFijo) ~?= [3,0,4,5,0,4], 
+
+      fst ( recrExpr (\e1 e2 x y gen -> ( x++[constructor e1]++y++[constructor e2],gen))  --Prueba de acceso a las subestructuras
+                      (\e1 e2 x y gen -> ( x++[constructor e1]++y++[constructor e2] ,gen))
+                      (\e1 e2 x y gen -> (x++[constructor e1]++y++[constructor e2],gen)) 
+                      (\e1 e2 x y gen -> ( x++[constructor e1]++y++[constructor e2] ,gen)) 
+                      (\x y gen -> ( [] ,gen))
+                      (\x gen -> ( [] ,gen))  
+                      (Div (Mult (Const 3) ( Rango 0 4 )) (Resta (Const 5) (Rango 0 4))) genFijo) ~?= [CEConst,CERango,CEMult, CEConst,CERango,CEResta]
+      
     ]
 
 testsFold :: Test
 testsFold =
   test
-    [ completar
+    [ fst ( foldExpr (\x y gen -> ( x++y ,gen)) 
+               (\x y gen -> ( x++y ,gen))
+               (\x y gen -> ( x++y ,gen)) 
+               (\x y gen -> ( x++y ,gen)) 
+               (\x y gen -> ( x:y:[] ,gen))
+               (\x gen -> ( x:[] ,gen))  (Div (Mult (Const 3) ( Rango 0 4 )) (Resta (Const 5) (Rango 0 4))) genFijo) ~?= [3,0,4,5,0,4]
     ]
 
 testsEval :: Test
@@ -177,14 +198,18 @@ testsEval =
 testsArmarHistograma :: Test
 testsArmarHistograma =
   test
-    [ fst (armarHistograma 1 3 (dameUno (1, 3)) genFijo)  ~?=  agregar 3 (agregar 2 (agregar 1 (vacio 1 (1, 3))))
+    [ fst (armarHistograma 1 3 (dameUno (1, 3)) genFijo)  ~?=  agregar 2 (agregar 2 (agregar 2 (vacio 1 (1, 3))))
       
     ]
 
 testsEvalHistograma :: Test
 testsEvalHistograma =
   test
-    [completar]
+    [
+      fst (evalHistograma 3 3 ( Div (Mult (Const 3) ( Rango 0 4 )) (Resta (Const 5) (Rango 0 4)) ) genFijo) ~?= histograma 3 (1,3) [2,2,2] 
+    ]
+    -- 3*2/(5-2) = 6/3 = 2
+    -- rango = (2-1, 2+1) = (1,3)
 
 testsParse :: Test
 testsParse =
