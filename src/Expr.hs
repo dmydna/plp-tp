@@ -1,11 +1,13 @@
 module Expr
   ( Expr (..),
+    ConstructorExpr (..),
     recrExpr,
     foldExpr,
     eval,
     armarHistograma,
     evalHistograma,
     mostrar,
+    constructor
   )
 where
 
@@ -24,35 +26,32 @@ data Expr
 
 
 
-recrExpr ::   (  Expr -> b-> b ->  G b) -> -- fdiv (Div e1 e2) b1 b2 
-             (  Expr ->b -> b ->  G b) -> 
-             (  Expr -> b ->  b ->  G b) ->
-             (  Expr -> b ->  b ->  G b) -> 
-             (  Expr -> Float -> Float -> G b) -> 
-             (  Expr ->Float ->G b) -> 
+recrExpr ::  (  Expr -> Expr -> b-> b ->  G b) -> -- fdiv (Div e1 e2) b1 b2 
+             (  Expr -> Expr ->b -> b ->  G b) -> 
+             (  Expr -> Expr -> b ->  b ->  G b) ->
+             (  Expr -> Expr -> b ->  b ->  G b) -> 
+             (  Float -> Float -> G b) -> 
+             (  Float ->G b) -> 
              Expr -> 
              G b
-recrExpr fdiv fmul fres fsum frng fcst (Const x) gen = fcst (Const x) x gen  -- tipo: Gen -> (b, Gen)
-recrExpr fdiv fmul fres fsum frng fcst (Rango x y) gen = frng (Rango x y) x y gen -- tipo : Gen -> (b, Gen)
-recrExpr fdiv fmul fres fsum frng fcst (Suma s1 s2) gen = fsum (Suma s1 s2) res1 res2 g2
+recrExpr fdiv fmul fres fsum frng fcst (Const x) gen = fcst x gen  -- tipo: Gen -> (b, Gen)
+recrExpr fdiv fmul fres fsum frng fcst (Rango x y) gen = frng x y gen -- tipo : Gen -> (b, Gen)
+recrExpr fdiv fmul fres fsum frng fcst (Suma s1 s2) gen = fsum  s1 s2 res1 res2 g2
                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
                                                                   (res1, g1) = rcall s1 gen
                                                                   (res2, g2) = rcall s2 g1
-recrExpr fdiv fmul fres fsum frng fcst (Resta r1 r2) gen = fres (Resta r1 r2) res1 res2 g2
+recrExpr fdiv fmul fres fsum frng fcst (Resta r1 r2) gen = fres r1 r2 res1 res2 g2
                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
                                                                   (res1, g1) = rcall r1 gen
                                                                   (res2, g2) = rcall r2 g1
-recrExpr fdiv fmul fres fsum frng fcst (Mult m1 m2) gen = fmul (Mult m1 m2) res1 res2 g2
+recrExpr fdiv fmul fres fsum frng fcst (Mult m1 m2) gen = fmul m1 m2 res1 res2 g2
                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
                                                                   (res1, g1) = rcall m1 gen
                                                                   (res2, g2) = rcall m2 g1
-recrExpr fdiv fmul fres fsum frng fcst (Div d1 d2) gen = fdiv (Div d1 d2) res1 res2 g2
+recrExpr fdiv fmul fres fsum frng fcst (Div d1 d2) gen = fdiv d1 d2 res1 res2 g2
                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
                                                                   (res1, g1) = rcall d1 gen
                                                                   (res2, g2) = rcall d2 g1
-
-
-
 
 foldExpr :: ( b-> b ->  G b) ->
              ( b -> b ->  G b) -> 
@@ -99,8 +98,8 @@ armarHistograma :: Int -> Int -> G Float -> G Histograma
 armarHistograma m n f  = (\g  -> let 
                                     (vs, g1) = (muestra f n g) 
                                     (inicio,fin) = rango95 vs 
-                                    tamaño  =  (fin - inicio) / (fromIntegral m)
-                                  in ( histograma m (inicio, tamaño) vs, g1 )
+                                   -- tamaño  =  (fin - inicio) / (fromIntegral m)
+                                  in ( histograma m (inicio, fin) vs, g1 )
              )
 
 -- | @evalHistograma m n e g@ evalúa la expresión @e@ usando el generador @g@ @n@ veces
@@ -119,14 +118,18 @@ evalHistograma m n expr = armarHistograma m n (eval expr)
 -- | Mostrar las expresiones, pero evitando algunos paréntesis innecesarios.
 -- En particular queremos evitar paréntesis en sumas y productos anidados.
 mostrar :: Expr -> String
-mostrar expr = fst $ foldExpr 
-                    (\x y gen -> (x++"/"++y, gen))
-                    (\x y gen -> (x++"*"++y, gen))
-                    (\x y gen -> (x++"-"++y, gen))
-                    (\x y gen -> (x++"+"++y, gen))
+mostrar expr = fst $ recrExpr 
+                    (\e1 e2 x y gen -> ( (postProcesarExpresion CEDiv e1 x)++" / "++(postProcesarExpresion CEDiv e2 y), gen))
+                    (\e1 e2 x y gen -> ( (postProcesarExpresion CEMult e1 x)++" * "++(postProcesarExpresion CEMult e2 y), gen)) 
+                    (\e1 e2 x y gen -> ( (postProcesarExpresion CEResta e1 x)++" - "++(postProcesarExpresion CEResta e2 y), gen)) 
+                    (\e1 e2 x y gen -> ( (postProcesarExpresion CESuma e1 x)++" + "++(postProcesarExpresion CESuma e2 y), gen))
                     (\x y gen -> (show x++"~"++show y, gen))
                     (\x gen -> (show x, gen)) expr genFijo
 
+
+-- Retorna un nuevo string que le agrega parentesis al string de la subestructura en caso de que deba hacerse.
+postProcesarExpresion :: ConstructorExpr -> Expr -> String -> String
+postProcesarExpresion superExprConst subExpr subExprStr = maybeParen (hayParentesis superExprConst (constructor subExpr) ) subExprStr
 
 
 data ConstructorExpr = CEConst | CERango | CESuma | CEResta | CEMult | CEDiv
@@ -140,6 +143,16 @@ constructor (Suma _ _) = CESuma
 constructor (Resta _ _) = CEResta
 constructor (Mult _ _) = CEMult
 constructor (Div _ _) = CEDiv
+
+
+-- hayParentesis super sub :: indica si hay que agregar parentesis a la subexpresion segun cual sea la subexpresion
+hayParentesis:: ConstructorExpr -> ConstructorExpr -> Bool
+hayParentesis _ CEConst = False 
+hayParentesis _ CERango = False 
+hayParentesis CESuma CESuma = False
+hayParentesis CEMult CEMult = False
+hayParentesis _ _ = True
+
 
 -- | Agrega paréntesis antes y después del string si el Bool es True.
 maybeParen :: Bool -> String -> String
