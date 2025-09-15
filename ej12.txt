@@ -15,15 +15,19 @@ Por principio de inducción estructural, sea P una propiedad sobre el tipo Expr:
 Entonces, ∀e :: Expre. P(e)
 
 En esta demostración, P(e) := ∀e :: Expr . cantLit e = S (cantOp e)
-Demostramos casos 1, 2  para el Caso base y Caso 3 para el Caso Inductivo, el resto son analogos al Caso 3.
+Demostramos Casos 1, 2  para el Caso base y Caso 3 para el Caso Inductivo, el resto son analogos al Caso 3.
 
-Caso 1. ∀n :: Float . ∀e :: Expr. e = (Const n):
+Caso 1. 
+
+∀n :: Float . ∀e :: Expr. e = (Const n):
 
        cantLit (Const n) 
 {L1} = S Z 
 {O1} = S (cantOp (Const n))
 
-Caso 2. ∀n,m :: Float . ∀e :: Expr . e = (Rango n m)
+Caso 2. 
+
+∀n,m :: Float . ∀e :: Expr . e = (Rango n m)
 
        cantLit (Rango n m)
 {L2} = S Z
@@ -32,26 +36,23 @@ Caso 2. ∀n,m :: Float . ∀e :: Expr . e = (Rango n m)
 Caso 3. 
 
 Como Suma es un constructor recursivo, por inducción basta ver:
-- Caso base: ∀n :: Float .    P(Const n)      que ya lo probamos anteriormente en el primer caso.
-- Caso base:  ∀n,m :: Float . P(Rango n m)     que ya lo probamos anteriormente en el primer caso.
-- Caso inductivo: ∀e1,e2 :: Expr . ∀e :: Expr . cantLit (Suma e1 e2) = S (cantOp (Suma e1 e2)) 
-
-
+- Caso base: ∀n :: Float .   P(Const n)       que ya lo probamos en Caso 1.
+- Caso base: ∀n,m :: Float . P(Rango n m)     que ya lo probamos en Caso 2.
+- Caso inductivo: ∀e1,e2 :: Expr . cantLit (Suma e1 e2) = S (cantOp (Suma e1 e2)) 
 
 
 con P(e) := ∀e :: Expr . cantLit e = S (cantOp e)  
-    P(Sum e1 e2) := ∀e1,e2 :: Expr . ∀e :: Expr . cantLit (Suma e1 e2) = S (cantOp (Suma e1 e2)) := E
-    HI := P(e1) & P(e2) 
+       TI := P(Sum e1 e2) := ∀e1,e2 :: Expr . cantLit (Suma e1 e2) = S (cantOp (Suma e1 e2)) 
+       HI := P(e1) & P(e2) 
 
-
-            cantLit e
+                     cantLit e
 {L3}     =  suma (cantLit e1) (cantLit e2)
 {H1}     =  suma (S (cantOp e1)) (S (cantOp e2))   
 {S2}     =  S  (  suma (cantOp e1)  (S (cantOp e2)) )
 {CONMUT} =  S  (  suma (S (cantOp e2)) (cantOp e1)  )
 {S2}     =  S  (  S (suma (cantOp e2) (cantOp e1)  )) 
 {CONMUT} =  S  S (suma (cantOp e1) (cantOp e2))
-{E}     =  cantOp e
+{TI}     =  cantOp e
 
 
 
