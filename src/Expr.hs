@@ -26,59 +26,120 @@ data Expr
 
 
 
-recrExpr ::  (  Expr -> Expr -> b-> b ->  G b) -> -- fdiv (Div e1 e2) b1 b2 
-             (  Expr -> Expr ->b -> b ->  G b) -> 
-             (  Expr -> Expr -> b ->  b ->  G b) ->
-             (  Expr -> Expr -> b ->  b ->  G b) -> 
-             (  Float -> Float -> G b) -> 
-             (  Float ->G b) -> 
-             Expr -> 
-             G b
-recrExpr fdiv fmul fres fsum frng fcst (Const x) gen = fcst x gen  -- tipo: Gen -> (b, Gen)
-recrExpr fdiv fmul fres fsum frng fcst (Rango x y) gen = frng x y gen -- tipo : Gen -> (b, Gen)
-recrExpr fdiv fmul fres fsum frng fcst (Suma s1 s2) gen = fsum  s1 s2 res1 res2 g2
-                                                            where rcall = recrExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall s1 gen
-                                                                  (res2, g2) = rcall s2 g1
-recrExpr fdiv fmul fres fsum frng fcst (Resta r1 r2) gen = fres r1 r2 res1 res2 g2
-                                                            where rcall = recrExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall r1 gen
-                                                                  (res2, g2) = rcall r2 g1
-recrExpr fdiv fmul fres fsum frng fcst (Mult m1 m2) gen = fmul m1 m2 res1 res2 g2
-                                                            where rcall = recrExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall m1 gen
-                                                                  (res2, g2) = rcall m2 g1
-recrExpr fdiv fmul fres fsum frng fcst (Div d1 d2) gen = fdiv d1 d2 res1 res2 g2
-                                                            where rcall = recrExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall d1 gen
-                                                                  (res2, g2) = rcall d2 g1
+-- recrExpr ::  (  Expr -> Expr -> b-> b ->  G b) -> -- fdiv (Div e1 e2) b1 b2 
+--              (  Expr -> Expr ->b -> b ->  G b) -> 
+--              (  Expr -> Expr -> b ->  b ->  G b) ->
+--              (  Expr -> Expr -> b ->  b ->  G b) -> 
+--              (  Float -> Float -> G b) -> 
+--              (  Float ->G b) -> 
+--              Expr -> 
+--              G b
+-- recrExpr fdiv fmul fres fsum frng fcst (Const x) gen = fcst x gen  -- tipo: Gen -> (b, Gen)
+-- recrExpr fdiv fmul fres fsum frng fcst (Rango x y) gen = frng x y gen -- tipo : Gen -> (b, Gen)
+-- recrExpr fdiv fmul fres fsum frng fcst (Suma s1 s2) gen = fsum  s1 s2 res1 res2 g2
+--                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall s1 gen
+--                                                                   (res2, g2) = rcall s2 g1
+-- recrExpr fdiv fmul fres fsum frng fcst (Resta r1 r2) gen = fres r1 r2 res1 res2 g2
+--                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall r1 gen
+--                                                                   (res2, g2) = rcall r2 g1
+-- recrExpr fdiv fmul fres fsum frng fcst (Mult m1 m2) gen = fmul m1 m2 res1 res2 g2
+--                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall m1 gen
+--                                                                   (res2, g2) = rcall m2 g1
+-- recrExpr fdiv fmul fres fsum frng fcst (Div d1 d2) gen = fdiv d1 d2 res1 res2 g2
+--                                                             where rcall = recrExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall d1 gen
+--                                                                   (res2, g2) = rcall d2 g1
 
-foldExpr :: ( b-> b ->  G b) ->
-             ( b -> b ->  G b) -> 
-             ( b ->  b ->  G b) ->
-             ( b ->  b ->  G b) -> 
-             ( Float -> Float -> G b) -> 
+
+
+
+-- foldExpr :: ( b-> b ->  G b) ->
+--              ( b -> b ->  G b) -> 
+--              ( b ->  b ->  G b) ->
+--              ( b ->  b ->  G b) -> 
+--              ( Float -> Float -> G b) -> 
+--              (Float ->G b) -> 
+--              Expr -> 
+--              G b
+-- foldExpr fdiv fmul fres fsum frng fcst (Const x) gen = fcst x gen  -- tipo: Gen -> (b, Gen)
+-- foldExpr fdiv fmul fres fsum frng fcst (Rango x y) gen = frng x y gen -- tipo : Gen -> (b, Gen)
+-- foldExpr fdiv fmul fres fsum frng fcst (Suma s1 s2) gen = fsum res1 res2 g2
+--                                                             where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall s1 gen
+--                                                                   (res2, g2) = rcall s2 g1
+-- foldExpr fdiv fmul fres fsum frng fcst (Resta r1 r2) gen = fres res1 res2 g2
+--                                                             where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall r1 gen
+--                                                                   (res2, g2) = rcall r2 g1
+-- foldExpr fdiv fmul fres fsum frng fcst (Mult m1 m2) gen = fmul res1 res2 g2
+--                                                             where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall m1 gen
+--                                                                   (res2, g2) = rcall m2 g1
+-- foldExpr fdiv fmul fres fsum frng fcst (Div d1 d2) gen = fdiv res1 res2 g2
+--                                                             where rcall = foldExpr fdiv fmul fres fsum frng fcst 
+--                                                                   (res1, g1) = rcall d1 gen
+--                                                                   (res2, g2) = rcall d2 g1
+
+
+
+-- | version 2.0 
+recrExpr ::  (Expr -> Expr -> b -> b -> G b) -> 
+             (Expr -> Expr -> b -> b -> G b) -> 
+             (Expr -> Expr -> b -> b -> G b) ->
+             (Expr -> Expr -> b -> b -> G b) -> 
+             (Float -> Float -> G b) -> 
              (Float ->G b) -> 
              Expr -> 
              G b
-foldExpr fdiv fmul fres fsum frng fcst (Const x) gen = fcst x gen  -- tipo: Gen -> (b, Gen)
-foldExpr fdiv fmul fres fsum frng fcst (Rango x y) gen = frng x y gen -- tipo : Gen -> (b, Gen)
-foldExpr fdiv fmul fres fsum frng fcst (Suma s1 s2) gen = fsum res1 res2 g2
-                                                            where rcall = foldExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall s1 gen
-                                                                  (res2, g2) = rcall s2 g1
-foldExpr fdiv fmul fres fsum frng fcst (Resta r1 r2) gen = fres res1 res2 g2
-                                                            where rcall = foldExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall r1 gen
-                                                                  (res2, g2) = rcall r2 g1
-foldExpr fdiv fmul fres fsum frng fcst (Mult m1 m2) gen = fmul res1 res2 g2
-                                                            where rcall = foldExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall m1 gen
-                                                                  (res2, g2) = rcall m2 g1
-foldExpr fdiv fmul fres fsum frng fcst (Div d1 d2) gen = fdiv res1 res2 g2
-                                                            where rcall = foldExpr fdiv fmul fres fsum frng fcst 
-                                                                  (res1, g1) = rcall d1 gen
-                                                                  (res2, g2) = rcall d2 g1
+recrExpr fdiv fmul fres fsum frng fcst expr gen = case expr of
+   Const x     -> fcst x gen
+   Rango x y   -> frng x y gen
+   Suma e1 e2  -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fsum e1 e2 res1 res2 g2
+   Resta e1 e2 -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fres e1 e2 res1 res2 g2
+   Mult e1 e2  -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fmul e1 e2 res1 res2 g2
+   Div e1 e2   -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fdiv e1 e2 res1 res2 g2
+   where rec = recrExpr fdiv fmul fres fsum frng fcst
+
+
+-- | version 2.0 
+foldExpr :: (b -> b -> G b) ->
+            (b -> b -> G b) -> 
+            (b -> b -> G b) ->
+            (b -> b -> G b) -> 
+            (Float -> Float -> G b) -> 
+            (Float ->G b) -> 
+            Expr -> 
+            G b
+foldExpr fdiv fmul fres fsum frng fcst expr gen = case expr of
+   Const x     -> fcst x gen
+   Rango x y   -> frng x y gen
+   Suma e1 e2  -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fsum res1 res2 g2
+   Resta e1 e2 -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fres res1 res2 g2
+   Mult e1 e2  -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fmul res1 res2 g2
+   Div e1 e2   -> let (res1, g1) = rec e1 gen
+                      (res2, g2) = rec e1 g1
+                  in fdiv res1 res2 g2
+   where
+     rec = foldExpr fdiv fmul fres fsum frng fcst
+
+
 
 
 
@@ -93,14 +154,12 @@ eval = foldExpr (\x y gen -> (x/y, gen))
 
 -- | @armarHistograma m n f g@ arma un histograma con @m@ casilleros
 -- a partir del resultado de tomar @n@ muestras de @f@ usando el generador @g@.
---armarHistograma :: Int -> Int -> ( Gen -> (Float, Gen) )-> Gen -> (Histograma, Gen)
-armarHistograma :: Int -> Int -> G Float -> G Histograma
-armarHistograma m n f  = (\g  -> let 
-                                    (vs, g1) = (muestra f n g) 
-                                    (inicio,fin) = rango95 vs 
-                                   -- tamaño  =  (fin - inicio) / (fromIntegral m)
-                                  in ( histograma m (inicio, fin) vs, g1 )
-             )
+armarHistograma :: Int -> Int -> (Gen -> (Float, Gen)) -> Gen -> (Histograma, Gen)
+armarHistograma m n f = \g ->
+  let (xs, g1)     = muestra f n g
+      (inicio,fin) = rango95 xs
+      tamaño       = (fin - inicio) / fromIntegral m
+  in (histograma m (inicio, fin) xs, g1)
 
 -- | @evalHistograma m n e g@ evalúa la expresión @e@ usando el generador @g@ @n@ veces
 -- devuelve un histograma con @m@ casilleros y rango calculado con @rango95@ para abarcar el 95% de confianza de los valores.

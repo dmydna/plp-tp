@@ -30,16 +30,11 @@ vacio n (i, fin) = Histograma i t (replicate (n+2) 0)
                           t = (fin - i)/(fromIntegral n)
 
 
-posicion :: Float -> Float -> Float -> Int -> Int
-posicion n i t len | n < i = 0
-                   | otherwise = min (floor ( (n-i)/t ) +1 ) len
-
-
 agregar :: Float -> Histograma -> Histograma
 agregar n (Histograma i t cs) = 
-                Histograma i t 
-                (actualizarElem (posicion n i t (length cs)) ( +1 ) cs)
-        
+                Histograma i t (actualizarElem (posicion) ( +1 ) cs)
+                where posicion | n < i = 0
+                               | otherwise = min (floor ( (n-i)/t ) +1 ) (length cs)
 
 histograma :: Int -> (Float, Float) -> [Float] -> Histograma
 histograma n rango =  foldr (\x rec -> agregar x rec) (vacio n rango) 
